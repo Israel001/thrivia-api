@@ -28,6 +28,7 @@ export class ExpiredJwtStrategy extends PassportStrategy(
       firstName: payload.firstName,
       lastName: payload.lastName,
       phoneNumber: payload.phoneNumber,
+      bankAccounts: payload.bankAccounts,
     };
   }
 }

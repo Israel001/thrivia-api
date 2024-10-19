@@ -37,3 +37,14 @@ export class ProviderPayoutDto {
   reference: string;
   narration: string;
 }
+
+export class CreateReservedAccountDto {
+  accountReference: string;
+  accountName: string;
+  currencyCode: string;
+  customerEmail: string;
+  customerName: string;
+  bvn: string;
+  nin: string;
+  getAllAvailableBanks: boolean;
+}

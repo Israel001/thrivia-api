@@ -1,9 +1,17 @@
-import { BadRequestException, Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { MonnifyConfig } from 'src/config/types/monnify.config';
 import axios, { AxiosError } from 'axios';
 import { camelCaseKeysToUnderscore } from 'src/utils';
 import { PaymentProvider } from '../payment-provider.contract';
-import { ProviderPayoutDto } from 'src/modules/wallets/wallets.dto';
+import {
+  CreateReservedAccountDto,
+  ProviderPayoutDto,
+} from 'src/modules/wallets/wallets.dto';
 import util from 'util';
 
 @Injectable()
@@ -68,6 +76,43 @@ export class MonnifyProvider implements PaymentProvider {
     }
   }
 
+  async createReservedAccount(
+    details: CreateReservedAccountDto,
+  ): Promise<{ bankAccounts: any[]; providerResponse: any }> {
+    const accessToken = await this.getAccessToken();
+    const response = await axios
+      .post(
+        `${this.config.baseUrl}/api/v2/bank-transfer/reserved-accounts`,
+        {
+          accountReference: details.accountReference,
+          accountName: details.accountName,
+          currencyCode: details.currencyCode,
+          contractCode: this.config.contractCode,
+          customerEmail: details.customerEmail,
+          customerName: details.customerName,
+          bvn: details.bvn,
+          nin: details.nin,
+          getAllAvailableBanks: details.getAllAvailableBanks,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        },
+      )
+      .catch((error) => {
+        console.log(util.inspect(error.response, true, null, false));
+        throw new ServiceUnavailableException(
+          'An error occurred with our provider while trying to create a reserved account. Please try again later',
+        );
+        throw error;
+      });
+    return {
+      bankAccounts: response.data.responseBody?.accounts,
+      providerResponse: response.data.responseBody,
+    };
+  }
+
   async payout({
     amount,
     bankCode,
@@ -98,7 +143,9 @@ export class MonnifyProvider implements PaymentProvider {
       )
       .catch((error) => {
         console.log(util.inspect(error.response, true, null, false));
-        throw new ServiceUnavailableException("Withdrawal currently unavailable");
+        throw new ServiceUnavailableException(
+          'Withdrawal currently unavailable',
+        );
         throw error;
       });
     return {

@@ -1,4 +1,7 @@
-import { ProviderPayoutDto } from 'src/modules/wallets/wallets.dto';
+import {
+  CreateReservedAccountDto,
+  ProviderPayoutDto,
+} from 'src/modules/wallets/wallets.dto';
 
 export interface PaymentProvider {
   getProviderId(): string;
@@ -6,4 +9,7 @@ export interface PaymentProvider {
   verifyBankDetails(bankDetails: any): Promise<{ account_name: string }>;
   payout(details: ProviderPayoutDto): Promise<{ status: string; data: any }>;
   calculatePayoutAmount(amount: number): number;
+  createReservedAccount(
+    details: CreateReservedAccountDto,
+  ): Promise<{ bankAccounts: any[]; providerResponse: any }>;
 }

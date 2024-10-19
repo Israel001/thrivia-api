@@ -81,10 +81,10 @@ export class SharedService {
         `${this.termiiConfig.baseUrl}/api/sms/send`,
         {
           to: phone,
-          from: 'Thrivia',
-          sms: `Hi there, your code from Thrivia is: ${otp}`,
+          from: 'N-Alert',
+          sms: `Your Thrivia verification code is ${otp}. Valid for 10 mins, one-time use only.`,
           type: 'plain',
-          channel: 'generic',
+          channel: 'dnd',
           api_key: this.termiiConfig.apiKey,
         },
       );

@@ -24,6 +24,7 @@ export interface IAuthContext {
   firstName: string;
   lastName: string;
   phoneNumber: string;
+  bankAccounts: any[];
 }
 
 export enum OTPActionType {
@@ -57,7 +58,7 @@ export enum LoanStatus {
   REJECTED = 'REJECTED',
   CANCELLED = 'CANCELLED',
   CLOSED = 'CLOSED',
-  OVERDUE = 'OVERDUE'
+  OVERDUE = 'OVERDUE',
 }
 
 export enum PaymentType {

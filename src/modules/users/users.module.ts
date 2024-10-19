@@ -1,6 +1,6 @@
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { forwardRef, Module } from '@nestjs/common';
-import { Users } from './users.entity';
+import { OTP, Users } from './users.entity';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { SharedModule } from '../shared/shared.module';
@@ -27,6 +27,7 @@ import { WalletsModule } from '../wallets/wallets.module';
         Transactions,
         Wallets,
         WithdrawalRequests,
+        OTP,
       ],
     }),
     SharedModule,

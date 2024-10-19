@@ -1,4 +1,11 @@
-import { Entity, Filter, ManyToOne, PrimaryKey, Property, Unique } from '@mikro-orm/core';
+import {
+  Entity,
+  Filter,
+  ManyToOne,
+  PrimaryKey,
+  Property,
+  Unique,
+} from '@mikro-orm/core';
 import { Timestamp } from '../../base/timestamp.entity';
 import { Cooperatives } from '../cooperatives/cooperatives.entity';
 
@@ -73,13 +80,31 @@ export class Users extends Timestamp {
   @Property({ type: 'longtext', nullable: true })
   additionalDetails: string;
 
+  @Property({ nullable: true })
+  bvn: string;
+
+  @Property({ nullable: true })
+  nin: string;
+
+  @Property({ nullable: true })
+  accountName: string;
+
+  @Property({ nullable: true })
+  accountReference: string;
+
+  @Property({ type: 'longtext', nullable: true })
+  bankAccounts: string;
+
+  @Property({ type: 'longtext', nullable: true })
+  providerResponse: string;
+
   @ManyToOne(() => Cooperatives, {
     fieldName: 'active_cooperative',
     referenceColumnName: 'uuid',
     joinColumn: 'uuid',
     columnType: 'varchar(255)',
     nullable: true,
-    eager: true
+    eager: true,
   })
   activeCooperative: Cooperatives;
 }

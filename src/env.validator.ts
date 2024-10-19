@@ -35,6 +35,8 @@ class EnvironmentVariables {
   @IsString()
   MONNIFY_ACCOUNT_NUMBER: string;
   @IsString()
+  MONNIFY_CONTRACT_CODE: string;
+  @IsString()
   PAYMENT_PROVIDER: string;
   @IsString()
   SMTP_HOST: string;

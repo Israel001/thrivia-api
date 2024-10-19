@@ -54,8 +54,9 @@ export class AuthService {
       firstName: user.firstName,
       lastName: user.lastName,
       phoneNumber: user.phoneNumber,
+      bankAccounts: JSON.parse(user.bankAccounts),
     };
-    const userModel = await this.usersRepository.findOne({ uuid: user.uuid })
+    const userModel = await this.usersRepository.findOne({ uuid: user.uuid });
     userModel.lastLoggedIn = new Date();
     await this.em.flush();
     delete user.password;
@@ -80,14 +81,14 @@ export class AuthService {
     if (passwordMatch) {
       if (user.deletedAt)
         throw new ForbiddenException('This account is disabled');
-      // if (!user.phoneVerified) {
-      //   const pinId = nanoid();
-      //   const otp = generateOtp();
-      //   await this.sharedService.sendOtp(otp, user.phoneNumber, {} as any);
-      //   const otpModel = this.otpRepository.create({ otp, pinId });
-      //   this.em.persistAndFlush(otpModel);
-      //   return { pinId, uuid: user.uuid };
-      // }
+      if (!user.phoneVerified) {
+        const pinId = nanoid();
+        const otp = generateOtp();
+        await this.sharedService.sendOtp(otp, user.phoneNumber, {} as any);
+        const otpModel = this.otpRepository.create({ otp, pinId });
+        this.em.persistAndFlush(otpModel);
+        return { pinId, uuid: user.uuid };
+      }
       if (role === Role.MANAGER) {
         const cooperativeExists = await this.cooperativeUsersRepository.findOne(
           {

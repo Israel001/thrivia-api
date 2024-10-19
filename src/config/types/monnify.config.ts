@@ -3,4 +3,5 @@ export interface MonnifyConfig {
   secretKey: string;
   baseUrl: string;
   accountNumber: string;
+  contractCode: string;
 }

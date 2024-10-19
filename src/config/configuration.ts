@@ -21,6 +21,7 @@ export const MonnifyConfiguration = registerAs(
     baseUrl: process.env.MONNIFY_BASE_URL,
     apiKey: process.env.MONNIFY_API_KEY,
     accountNumber: process.env.MONNIFY_ACCOUNT_NUMBER,
+    contractCode: process.env.MONNIFY_CONTRACT_CODE,
   }),
 );
 

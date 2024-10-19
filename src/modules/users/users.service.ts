@@ -7,7 +7,7 @@ import {
   NotAcceptableException,
   NotFoundException,
 } from '@nestjs/common';
-import { Users } from './users.entity';
+import { OTP, Users } from './users.entity';
 import { EntityManager, EntityRepository } from '@mikro-orm/core';
 import {
   CreateCooperativeApplicationDto,
@@ -31,6 +31,8 @@ import { DepositMoneyDto } from '../cooperatives/cooperatives.dto';
 import { WalletsService } from '../wallets/wallets.service';
 import PaymentFactory from '../shared/payment-providers/payment-provider.factory';
 import { PaymentProvider } from '../shared/payment-providers/payment-provider.contract';
+import { nanoid } from 'nanoid';
+import { generateOtp } from 'src/utils';
 
 @Injectable()
 export class UsersService {
@@ -53,6 +55,8 @@ export class UsersService {
     private readonly transactionRepository: EntityRepository<Transactions>,
     @InjectRepository(WithdrawalRequests)
     private readonly withdrawalRequestRepository: EntityRepository<WithdrawalRequests>,
+    @InjectRepository(OTP)
+    private readonly otpRepository: EntityRepository<OTP>,
     private readonly em: EntityManager,
     private readonly sharedService: SharedService,
     private readonly walletService: WalletsService,
@@ -84,13 +88,26 @@ export class UsersService {
         );
       }
     }
+    const accountReference = nanoid();
+    const accountName = `THRIVIA / ${user.firstName} ${user.lastName}`;
+    const { bankAccounts, providerResponse } =
+      await this.paymentProvider.createReservedAccount({
+        accountReference,
+        accountName,
+        currencyCode: 'NGN',
+        customerEmail: user.email,
+        customerName: `${user.firstName} ${user.lastName}`,
+        bvn: user.bvn,
+        nin: user.nin,
+        getAllAvailableBanks: true,
+      });
     const hashedPassword = await bcrypt.hash(user.password, 12);
-    // TODO: WILL COME IN LATER
-    // const pinId = nanoid();
-    // const otp = generateOtp();
-    // await this.sharedService.sendOtp(otp, user.phoneNumber, {} as any);
-    // const otpModel = this.otpRepository.create({ otp, pinId });
-    // this.em.persistAndFlush(otpModel);
+    const pinId = nanoid();
+    const otp = generateOtp();
+    await this.sharedService.sendOtp(otp, user.phoneNumber, {} as any);
+    const otpModel = this.otpRepository.create({ otp, pinId });
+    this.em.persistAndFlush(otpModel);
+    const userUuid = v4();
     const userModel = this.usersRepository.create({
       firstName: user.firstName,
       lastName: user.lastName,
@@ -98,10 +115,16 @@ export class UsersService {
       password: hashedPassword,
       phoneNumber: user.phoneNumber,
       lastLoggedIn: new Date(),
-      uuid: v4(),
+      uuid: userUuid,
+      bvn: user.bvn,
+      nin: user.nin,
+      accountReference,
+      accountName,
+      bankAccounts: JSON.stringify(bankAccounts),
+      providerResponse: JSON.stringify(providerResponse),
     });
     await this.em.persistAndFlush(userModel);
-    return this.authService.login(userModel);
+    return { pinId, uuid: userUuid };
   }
 
   async findByEmailOrPhone(emailOrPhone: string) {
@@ -122,7 +145,7 @@ export class UsersService {
 
   async fetchCooperatives({ uuid }: IAuthContext) {
     return this.cooperativeUsersRepository.find({
-      user: { uuid }
+      user: { uuid },
     });
   }
 
@@ -168,7 +191,9 @@ export class UsersService {
           email: application.email,
           address: application.address,
           user: this.usersRepository.getReference(uuid),
-          cooperative: this.cooperativeRepository.getReference(cooperativeExists.uuid),
+          cooperative: this.cooperativeRepository.getReference(
+            cooperativeExists.uuid,
+          ),
           status: ApplicationStatus.PENDING,
         });
       await em.persistAndFlush(cooperativeApplicationModel);
@@ -216,7 +241,7 @@ export class UsersService {
       cooperative: walletExists.cooperative,
       title: walletExists.title,
       user: null,
-      uuid: { $ne: walletUuid }
+      uuid: { $ne: walletUuid },
     });
     const paymentExists = await this.paymentRepository.findOne({
       uuid: paymentUuid,
@@ -289,13 +314,14 @@ export class UsersService {
   async fetchTransactions(walletUuid: string, { uuid }: IAuthContext) {
     return this.transactionRepository.find({
       wallet: { uuid: walletUuid },
-      user: { uuid }
+      user: { uuid },
     });
   }
 
   async setActiveCooperative(coopUuid: string, { uuid }: IAuthContext) {
     const user = await this.usersRepository.findOne({ uuid });
-    if (!user) throw new NotFoundException(`User with uuid: '${uuid}' not found`);
+    if (!user)
+      throw new NotFoundException(`User with uuid: '${uuid}' not found`);
     user.activeCooperative = this.cooperativeRepository.getReference(coopUuid);
     await this.em.flush();
   }

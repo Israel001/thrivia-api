@@ -28,6 +28,12 @@ export class CreateUserDto {
   @IsString()
   @Length(1, 50)
   password: string;
+
+  @IsString()
+  bvn: string;
+
+  @IsString()
+  nin: string;
 }
 
 export class CreateCooperativeApplicationDto {
