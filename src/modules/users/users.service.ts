@@ -104,26 +104,29 @@ export class UsersService {
     const hashedPassword = await bcrypt.hash(user.password, 12);
     const pinId = nanoid();
     const otp = generateOtp();
-    await this.sharedService.sendOtp(otp, user.phoneNumber, {} as any);
-    const otpModel = this.otpRepository.create({ otp, pinId });
-    this.em.persistAndFlush(otpModel);
     const userUuid = v4();
-    const userModel = this.usersRepository.create({
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      password: hashedPassword,
-      phoneNumber: user.phoneNumber,
-      lastLoggedIn: new Date(),
-      uuid: userUuid,
-      bvn: user.bvn,
-      nin: user.nin,
-      accountReference,
-      accountName,
-      bankAccounts: JSON.stringify(bankAccounts),
-      providerResponse: JSON.stringify(providerResponse),
+    await this.sharedService.sendOtp(otp, user.phoneNumber, {} as any);
+    await this.em.transactional(async (em) => {
+      const otpModel = this.otpRepository.create({ otp, pinId, uuid: v4() });
+      const userModel = this.usersRepository.create({
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        password: hashedPassword,
+        phoneNumber: user.phoneNumber,
+        lastLoggedIn: new Date(),
+        uuid: userUuid,
+        bvn: user.bvn,
+        nin: user.nin,
+        accountReference,
+        accountName: bankAccounts[0].accountName,
+        bankAccounts: JSON.stringify(bankAccounts),
+        providerResponse: JSON.stringify(providerResponse),
+      });
+      em.persist(otpModel);
+      em.persist(userModel);
+      await em.flush();
     });
-    await this.em.persistAndFlush(userModel);
     return { pinId, uuid: userUuid };
   }
 
