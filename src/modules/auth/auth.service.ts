@@ -27,6 +27,7 @@ import {
   VerifyOtpDto,
 } from './auth.dto';
 import { CooperativeUsers } from '../cooperatives/cooperatives.entity';
+import { v4 } from 'uuid';
 
 @Injectable()
 export class AuthService {
@@ -162,7 +163,7 @@ export class AuthService {
       subject,
       to: otpActionType === OTPActionType.RESET_PASSWORD ? user.email : '',
     });
-    const otpModel = this.otpRepository.create({ otp, pinId });
+    const otpModel = this.otpRepository.create({ uuid: v4(), otp, pinId });
     await this.em.persistAndFlush(otpModel);
     return pinId;
   }
