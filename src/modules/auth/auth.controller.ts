@@ -32,7 +32,7 @@ export class AuthController {
     return this.authService.refresh(refreshToken);
   }
 
-  @Post('verity-otp')
+  @Post('verify-otp')
   verifyOtp(@Body() body: VerifyOtpDto) {
     return this.authService.verifyOtp(body);
   }
