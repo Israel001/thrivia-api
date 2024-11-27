@@ -191,7 +191,7 @@ export class AuthService {
       subject: 'Reset Password OTP',
       to: emailOrPhone.includes('@') ? user.email : '',
     });
-    const otpModel = this.otpRepository.create({ otp, pinId });
+    const otpModel = this.otpRepository.create({ uuid: v4(), otp, pinId });
     await this.em.persistAndFlush(otpModel);
     return { pinId, userUuid: user.uuid };
   }
